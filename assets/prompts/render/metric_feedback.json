@@ -1,0 +1,14 @@
+{
+  "sharpness": "Improve sharpness and keep object boundaries well defined.",
+  "exposure": "Maintain stable, natural exposure and avoid locally overexposed or underexposed areas.",
+  "color_stability": "Keep object colors, materials, and lighting consistent across frames.",
+  "temporal_flicker": "Keep lighting, textures, and detail stable over time without flicker.",
+  "motion_smoothness": "Keep motion continuous, smooth, and physically plausible; avoid abrupt jumps or jitter.",
+  "motion_fidelity": "Preserve the reference video motion paths, directions, timing, and action phases exactly.",
+  "scene_stability": "Remove unintended camera or scene drift while preserving camera motion, entity motion and state changes required by the task and declared reference behavior.",
+  "visual_realism": "Improve realistic materials, lighting, shadows, and geometry. Remove unnatural textures, distorted parts, and visible generation artifacts.",
+  "physical_temporal_coherence": "Keep joints, contact relationships, object shapes, and interactions physically plausible and temporally consistent. Avoid floating, penetration, disappearance, or deformation.",
+  "task_semantic_consistency": "Fulfil the original task with the selected target structure, required entities and relationships, event order and state changes. Correct documented mapping errors without inventing unsupported mechanisms or actions.",
+  "abnormal_frames": "Avoid black, blank, corrupt, or low-information frames.",
+  "preserve": "Preserve declared target structure, motion, timing, camera behavior and task-relevant geometry while applying the following evidenced corrections. Do not copy untextured white-model surfaces or invent task content."
+}

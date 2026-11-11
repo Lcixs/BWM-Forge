@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "robots": [
+    {
+      "name": "UR5",
+      "embodiment": "robot_arm",
+      "format": "urdf",
+      "entrypoint": "robot_arm/UR5/urdf/ur5_robotiq85.urdf"
+    },
+    {
+      "name": "franka_panda_robotiq_2f85",
+      "embodiment": "robot_arm",
+      "format": "urdf",
+      "entrypoint": "robot_arm/franka_panda_robotiq_2f85/urdf/panda_robotiq.urdf"
+    },
+    {
+      "name": "g1_description",
+      "embodiment": "robot",
+      "format": "urdf",
+      "entrypoint": "robot/g1_description/urdf/robot.urdf"
+    },
+    {
+      "name": "go2w_description",
+      "embodiment": "robot_dog",
+      "format": "urdf",
+      "entrypoint": "robot_dog/go2w_description/urdf/go2w_description.urdf"
+    },
+    {
+      "name": "widowx",
+      "embodiment": "robot_arm",
+      "format": "urdf",
+      "entrypoint": "robot_arm/widowx/urdf/wx250s.urdf"
+    }
+  ]
+}

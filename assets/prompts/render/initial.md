@@ -1,0 +1,3 @@
+Generate realistic appearance footage from the accepted white-model video and the scoped appearance reference. Follow the original task. Preserve the selected target identity and structure, task-relevant geometry, entity relationships, motion, event order, duration and declared camera behavior. Apply required state changes.
+
+Use supported materials, natural lighting and plausible shadows without introducing deformation, flicker, unsupported entities or actions. Carry forward upstream limitations; appearance synthesis does not validate unresolved model or motion assumptions. Do not restore a source entity that the task replaces or excludes.

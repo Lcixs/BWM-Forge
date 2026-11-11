@@ -1,0 +1,10 @@
+/.vscode
+__pycache__/
+/output
+/tests
+/.venv-input
+/Render/config.py
+/assets/api
+/assets/experience-store
+/note.txt
+/main.py

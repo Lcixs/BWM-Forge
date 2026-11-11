@@ -1,0 +1,10 @@
+openai>=1.68.0
+numpy>=2.0,<3
+pyarrow>=23,<24
+httpx>=0.27,<1
+Pillow>=10.4,<13
+opencv-python
+requests
+openai-codex
+imageio-ffmpeg
+gradio==6.29.0
