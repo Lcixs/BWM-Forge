@@ -230,7 +230,7 @@ def summarize_record(record, task_dir, *, transport=None):
         validate=lambda v: validate_summary(v, record),
         reasoning_effort=BLENDER_SUMMARY_REASONING_EFFORT,
         connect_timeout_seconds=BLENDER_SUMMARY_CONNECT_TIMEOUT_SECONDS,
-        on_progress=log_progress,
+        on_progress=lambda message: log_progress(message, source="Harness"),
         max_output_tokens=BLENDER_SUMMARY_MAX_OUTPUT_TOKENS, max_retries=0, transport=transport))
     return validate_summary(response.data, record)
 

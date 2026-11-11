@@ -26,6 +26,12 @@
       "entrypoint": "robot_dog/go2w_description/urdf/go2w_description.urdf"
     },
     {
+      "name": "shadow_hand",
+      "embodiment": "dexterous_hand",
+      "format": "urdf",
+      "entrypoint": "dexterous_hand/shadow_hand/urdf/shadow_hand_bimanual.urdf"
+    },
+    {
       "name": "widowx",
       "embodiment": "robot_arm",
       "format": "urdf",

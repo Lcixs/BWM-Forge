@@ -16,33 +16,39 @@
   <img src="examples/main.jpg" width="100%" alt="BWM-Forge overview">
 </p>
 
-BWM-Forge creates Blender scenes and animations from robot assets, reference images, and action descriptions, then transforms proxy videos into realistic videos. Its GUI connects input processing, Blender modeling, video generation, human review, and experience accumulation in a single workflow, while preserving project files, results from each round, and execution records.
+**BWM-Forge** generates controllable robot videos by *programming the world* instead of predicting pixels end to end. A coding agent writes editable Blender scene programs that specify objects, robot motion, and cameras; Blender renders them into a **proxy video**; a video generation model then adds realistic appearance on top of that structure and motion.
+
+Because geometry, motion, and viewpoint stay explicit in code, you can move one object, swap in a different robot, or film the same interaction from a new camera without starting over. This repository provides the full pipeline and a local Gradio workspace that brings input processing, Blender modeling, video generation, human review, and a reusable experience store together in one place.
 
 ## 📖 Contents
 
-- [Overview](#overview)
+- [Highlights](#highlights)
+- [Framework](#framework)
 - [Demo](#demo)
 - [Quick Start](#quick-start)
-- [User Guide](#usage)
-- [Contributors](#authors)
+- [User Guide](#user-guide)
+- [Contributors](#contributors)
 - [Citation](#citation)
 - [License](#license)
 
 ---
 
-<a id="overview"></a>
+<a id="highlights"></a>
 
-## 🌟 Overview
+## 🌟 Highlights
 
 - **Three paradigms**: Generate motion from spatial semantics, motion priors, or real demonstrations.
-- **Robot asset library**: Support robot arms, humanoids, robot dogs, and dexterous hands, with local URDF import including mesh resources.
-- **Staged modeling**: Build the scene, robot, and composed animation separately, with preview images and complete proxy videos for review.
-- **Video generation and evaluation**: Generate videos from proxy videos and reference images, using local objective metrics and model-based visual evaluation to guide revisions.
-- **Round tracking and experience reuse**: Preserve project files, feedback, and logs for each round; retrieve prior experience, then archive results and update the experience store when a task is complete.
+- **Multiple embodiments**: Support robot arms, humanoids, robot dogs, and dexterous hands, with local URDF import including mesh resources.
+- **Staged, editable modeling**: Scene, robot, and composed animation are built as separate Blender stages. Every round keeps its `.blend` project, scripts, and previews, so results are revised rather than regenerated.
+- **Viewpoint control** Ask for a new camera in a revision while the scene layout, robot pose, and animation stay fixed, or reload a finished task to film it from another view.
+- **Evaluate, then revise**: Generate videos from proxy videos and reference images, using local objective metrics and model-based visual evaluation to guide revisions.
+- **Round tracking and experience reuse**: Modeling and rendering rules distilled from finished tasks are retrieved in later tasks.
 
-### Workflow
+<a id="framework"></a>
 
-`Input` → `Blender: Scene / Robot / Composed` → `Render` → `Harness`
+## 🧩 Framework
+
+The app runs four stages in order: **Input → Blender (Scene → Robot → Composed) → Render → Harness**. 
 
 <p align="center">
   <img src="examples/BWM-Forge.jpg" width="100%" alt="BWM-Forge framework">
@@ -68,7 +74,7 @@ The project is currently intended primarily for local use on Windows, with the i
 | Blender | Requires the Blender executable and its bundled Python; configure the executable path in `config.py` |
 | Python packages | See [requirements.txt](requirements.txt) |
 | Model services | A service supporting the Responses API, plus a video generation service compatible with the current integration |
-| Cloudflared | Temporarily publishes the proxy video during Render; the application first checks `Render/tools/cloudflared.exe` |
+| Cloudflared | Temporarily publishes the proxy video during Render. Place `cloudflared.exe` in `Render/tools/` from the [official releases](https://github.com/cloudflare/cloudflared/releases)|
 
 Model requests and video generation require internet access. The full workflow uses a temporary Cloudflare tunnel to make the selected proxy video accessible to the video generation service.
 
@@ -107,29 +113,23 @@ By default, Input, Blender, Render, and Harness share `OPENAI_BASE_URL` and `OPE
 
 The video service uses a separate request protocol, implemented in [Render/seedance.py](Render/seedance.py). When switching providers, check that task submission, status queries, and media input formats are compatible with this implementation.
 
-### 3. Create Credentials Files
+### 3. Add your API keys
 
-Using the default paths, create the following two files under `assets/api/`. You can also specify alternative paths in `config.py`.
+Create the folder `assets/api/` with the two files below, or point `OPENAI_AUTH_FILE` and `SEEDANCE_AUTH_FILE` in `config.py` to other locations.
 
 `assets/api/auth.json`:
 
 ```json
-{
-  "OPENAI_API_KEY": "REPLACE_WITH_YOUR_API_KEY"
-}
+{ "OPENAI_API_KEY": "REPLACE_WITH_YOUR_API_KEY" }
 ```
 
 `assets/api/seedance_auth.json`:
 
 ```json
-{
-  "SEEDANCE_API_KEY": "REPLACE_WITH_YOUR_API_KEY"
-}
+{ "SEEDANCE_API_KEY": "REPLACE_WITH_YOUR_API_KEY" }
 ```
 
-Replace the placeholders with your own API keys.
-
-### 4. Launch the Interface
+### 4. Launch
 
 Run this command from the repository root:
 
@@ -137,19 +137,13 @@ Run this command from the repository root:
 python -m gui.app
 ```
 
-The application will try to open your browser. You can also visit:
+Your browser opens automatically. If it doesn't, go to <http://127.0.0.1:7860>. The server listens on localhost only.
 
-```text
-http://127.0.0.1:7860
-```
-
-The interface listens only on the local machine by default.
-
-<a id="usage"></a>
+<a id="user-guide"></a>
 
 ## 🧭 User Guide
 
-### 🔄 Usage Workflow
+### Workflow
 
 #### 1. Prepare Inputs
 
@@ -181,15 +175,15 @@ After Blender finishes, click **Continue generation** to start video generation 
 
 You can reevaluate the video, request revisions, or click **Confirm final video** to confirm the result. Once confirmation and the stage summary are complete, Harness archives the results and updates the experience store.
 
-#### 4. Start from a Historical Task
+#### 4. Continue from a past task
 
-The interface provides access to historical tasks. **Load as new task** copies completed Blender results into a new task and returns to composed animation review, allowing you to revise an existing result.
+Click **Load historical task**, pick a task, then click **Load as new task**. This copies a finished task's Blender results into a new task and reopens the Composed review, which makes it easy to make further edits or film the scene from another camera.
 
-A workspace can run only one task at a time. A task awaiting human review also occupies that execution slot.
+A workspace runs one task at a time, and a task waiting for your review also holds that slot.
 
 <a id="trajectory-format"></a>
 
-### 📐 Trajectory Format
+### Trajectory Format
 
 The motion priors mode accepts two file formats:
 
@@ -207,11 +201,9 @@ For `joint` trajectories, robot arms, humanoids, and robot dogs all require join
 
 `eef` is supported only for robot arms. The gripper channel uses `0` for closed and `1` for open as reference conventions; the actual mapping depends on the asset's structure and calibration.
 
-<a id="outputs"></a>
+<a id="outputs-and-experience-store"></a>
 
-### 📂 Outputs and Experience Store
-
-#### Task Outputs
+### Outputs and Experience Store
 
 Each task is stored under `output/<task_id>/`. Its main outputs include:
 
@@ -227,19 +219,17 @@ Each task is stored under `output/<task_id>/`. Its main outputs include:
 
 Use the task records and interface to locate the final files for each version. Render revisions use distinct filenames.
 
-#### Experience Store and Prompts
-
 The experience store defaults to `assets/experience-store/`, with JSONL files for general experience and experience applicable to specific contexts. Blender modeling rounds and Render video versions retrieve relevant experience. When a task finishes, Harness uses the stage records to determine how the store should be updated.
 
 <a id="notes"></a>
 
-### 📌 Usage Notes
+### Notes
 
 - Task files contain local paths and status information. Keep input files, assets, and task directories in place while the application is running.
 - After modifying a URDF or mesh, delete the asset's cached `blender/robot.blend`, if present, before rebuilding the model.
 - Model requests, video generation, and revisions consume your own service quota. Model capabilities, service availability, and generation time depend on your configured providers.
 
-<a id="authors"></a>
+<a id="contributors"></a>
 
 ## 👥 Contributors
 

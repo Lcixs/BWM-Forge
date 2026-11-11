@@ -236,6 +236,7 @@ def _structured_console(task_dir: Path, task: dict[str, Any], limit: int = 500) 
                 rows.append((timestamp, order, message))
                 order += 1
 
+    has_blender_progress = False
     for raw in _tail_file_lines(task_dir / "blender/progress.jsonl", max_lines=400):
         try:
             record = json.loads(raw)
@@ -249,9 +250,11 @@ def _structured_console(task_dir: Path, task: dict[str, Any], limit: int = 500) 
         if source_task and record["message"].startswith(("Loading historical ", "Historical ")):
             continue
         stamp = _log_clock(timestamp)
+        source = "Harness" if record.get("source") == "Harness" else "Blender"
         for line in record["message"].splitlines():
             if line.strip():
-                rows.append((timestamp, order, f"[Blender] [{stamp}] {line.rstrip()[:500]}"))
+                has_blender_progress = True
+                rows.append((timestamp, order, f"[{source}] [{stamp}] {line.rstrip()[:500]}"))
                 order += 1
 
     for raw in _tail_file_lines(task_dir / "render/progress.jsonl", max_lines=400):
@@ -265,18 +268,22 @@ def _structured_console(task_dir: Path, task: dict[str, Any], limit: int = 500) 
         if not include(timestamp):
             continue
         stamp = _log_clock(timestamp)
+        source = "Harness" if record.get("source") == "Harness" else "Render"
         for line in record["message"].splitlines():
             if line.strip():
-                rows.append((timestamp, order, f"[Render] [{stamp}] {line.rstrip()[:500]}"))
+                rows.append((timestamp, order, f"[{source}] [{stamp}] {line.rstrip()[:500]}"))
                 order += 1
 
-    for path in sorted(task_dir.glob("blender/stages/*/*/evidence/video_render.log"))[-2:]:
-        timestamp = datetime.fromtimestamp(path.stat().st_mtime).astimezone().isoformat()
-        if not include(timestamp):
-            continue
-        for line in _tail_file_lines(path, max_lines=40):
-            rows.append((timestamp, order, f"[Blender] [{_log_clock(timestamp)}] {line}"))
-            order += 1
+    # Live progress already includes command output; raw logs are a legacy fallback.
+    if not has_blender_progress:
+        for path in sorted(task_dir.glob("blender/stages/*/*/evidence/video_render.log"))[-2:]:
+            timestamp = datetime.fromtimestamp(path.stat().st_mtime, timezone.utc).isoformat()
+            if not include(timestamp):
+                continue
+            for line in _tail_file_lines(path, max_lines=40):
+                if line.strip():
+                    rows.append((timestamp, order, f"[Blender] [{_log_clock(timestamp)}] {line}"))
+                    order += 1
 
     for stage, state in _stage_states(task_dir, task).items():
         if state == "pending" or (source_task and stage == "input"):
@@ -307,7 +314,9 @@ def _structured_console(task_dir: Path, task: dict[str, Any], limit: int = 500) 
         message = f"{state}: {step}" + (f" | {error}" if error else "")
         rows.append((timestamp, order, f"[{stage.title()}] [{_log_clock(timestamp)}] {message}"))
         order += 1
-    rows.sort(key=lambda item: (item[0], item[1]))
+    # ISO strings with different UTC offsets are not chronologically sortable.
+    unknown_time = datetime.min.replace(tzinfo=timezone.utc)
+    rows.sort(key=lambda item: (_log_time(item[0]) or unknown_time, item[1]))
     messages = [message for _, _, message in rows]
     return ([header, *messages[-(limit - 1):]] if limit > 1 else [header]) if header else messages[-limit:]
 

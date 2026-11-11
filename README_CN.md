@@ -16,33 +16,39 @@
   <img src="examples/main.jpg" width="100%" alt="BWM-Forge overview">
 </p>
 
-BWM-Forge 从机器人资产、参考图像与动作描述生成 Blender 场景和动画，再将白模视频转换为具有真实感的视频。项目通过 Gradio 提供图形界面，将输入处理、Blender 建模、视频生成、人工审核与经验积累串成一个流程，同时保存工程文件、各轮结果和运行记录。
+**BWM-Forge** 通过*对世界进行编程*生成可控的机器人视频，而不是端到端地预测像素。编程智能体编写可编辑的 Blender 场景程序，明确指定物体、机器人运动和相机；Blender 将其渲染为**白模视频（proxy video）**；视频生成模型再基于这些结构与运动添加真实感外观。
+
+几何、运动和视角都显式保留在代码中，因此你可以移动某个物体、更换机器人，或用新的相机视角拍摄同一段交互，而无需从头开始。本仓库提供完整流程与本地 Gradio 工作区，将输入处理、Blender 建模、视频生成、人工审核和可复用的经验库整合在一起。
 
 ## 📖 目录
 
-- [项目概览](#overview)
+- [项目亮点](#highlights)
+- [框架](#framework)
 - [Demo](#demo)
 - [快速开始](#quick-start)
-- [使用指南](#usage)
-- [贡献者](#authors)
+- [使用指南](#user-guide)
+- [贡献者](#contributors)
 - [引用](#citation)
 - [许可证](#license)
 
 ---
 
-<a id="overview"></a>
+<a id="highlights"></a>
 
-## 🌟 项目概览
+## 🌟 项目亮点
 
-- **三种范式**：空间语义驱动、运动先验驱动、真实示范驱动。
-- **机器人资产库**：支持机械臂、人形机器人、机械狗与灵巧手，可导入包含网格资源的本地 URDF。
-- **分阶段建模**：分别生成场景、机器人和组合动画，通过预览图与完整白模视频进行审核。
-- **视频生成与评估**：使用白模视频和参考图像生成视频，结合本地客观指标与模型视觉评估提供修改依据。
-- **轮次记录与经验复用**：保留各轮工程、反馈和日志；检索已有经验，并在任务结束后归档与更新经验库。
+- **三种范式**：根据空间语义、运动先验或真实示范生成动作。
+- **多种机器人形态**：支持机械臂、人形机器人、机械狗与灵巧手，可导入包含网格资源的本地 URDF。
+- **分阶段、可编辑的建模**：场景、机器人和组合动画分别在独立的 Blender 阶段中构建。每轮保留 `.blend` 工程、脚本和预览，便于在已有结果上修改，无需重新生成。
+- **视角控制**：通过修改指令更换相机，同时保持场景布局、机器人姿态和动画不变；也可以重新加载已完成的任务，从其他视角拍摄。
+- **先评估，再修改**：使用白模视频和参考图像生成视频，结合本地客观指标与模型视觉评估指导修改。
+- **轮次追踪与经验复用**：从已完成任务中提炼建模与渲染规则，供后续任务检索使用。
 
-### 工作流程
+<a id="framework"></a>
 
-`Input` → `Blender: Scene / Robot / Composed` → `Render` → `Harness`
+## 🧩 框架
+
+应用按顺序运行四个阶段：**Input → Blender（Scene → Robot → Composed）→ Render → Harness**。
 
 <p align="center">
   <img src="examples/BWM-Forge.jpg" width="100%" alt="BWM-Forge framework">
@@ -52,7 +58,7 @@ BWM-Forge 从机器人资产、参考图像与动作描述生成 Blender 场景�
 
 ## 🎬 Demo
 
-https://github.com/user-attachments/assets/16f00275-e761-4145-bf54-a166538858b6
+https://github.com/user-attachments/assets/419fc098-b061-4e2d-940e-27fd8a4a3cbf
 
 <a id="quick-start"></a>
 
@@ -67,8 +73,8 @@ https://github.com/user-attachments/assets/16f00275-e761-4145-bf54-a166538858b6
 | Python | 3.11 或更高版本，建议使用独立环境 |
 | Blender | 需要可执行文件及其内置 Python，路径在 `config.py` 中配置 |
 | Python 依赖 | 见 [requirements.txt](requirements.txt) |
-| 模型服务 | 支持 Responses API 的模型服务，以及当前代码对接的视频生成服务 |
-| Cloudflared | Render 阶段用于临时发布白模视频；程序优先查找 `Render/tools/cloudflared.exe`|
+| 模型服务 | 支持 Responses API 的模型服务，以及与当前接口实现兼容的视频生成服务 |
+| Cloudflared | Render 阶段用于临时发布白模视频。从[官方发布页](https://github.com/cloudflare/cloudflared/releases)下载 `cloudflared.exe`，放入 `Render/tools/` |
 
 模型请求和视频生成需要联网。完整流程会通过 Cloudflare 临时隧道提供所选白模视频，供视频服务读取。
 
@@ -91,7 +97,7 @@ python -m pip install -r requirements.txt
 | 配置 | 用途 |
 | --- | --- |
 | `OPENAI_BASE_URL` | Responses API 的根地址，例如 `https://your-provider.example/v1` |
-| `OPENAI_AUTH_FILE` | 通用模型认证文件路径 |
+| `OPENAI_AUTH_FILE` | 通用模型服务共用的认证文件路径 |
 | `INPUT_MODEL` | 首帧分析模型，需要支持图像输入 |
 | `BLENDER_MODEL` | Blender 建模使用的 Codex 模型 |
 | `BLENDER_EXE` | 本机 Blender 可执行文件的完整路径 |
@@ -107,29 +113,23 @@ python -m pip install -r requirements.txt
 
 视频服务使用独立的请求协议，具体接口见 [Render/seedance.py](Render/seedance.py)。更换服务商时，需要确认其提交、任务查询和媒体输入格式与当前实现兼容。
 
-### 3. 创建认证文件
+### 3. 填写 API 密钥
 
-按默认路径，在 `assets/api/` 下创建以下两个文件。也可以在 `config.py` 中指定其他路径。
+创建 `assets/api/` 文件夹，并在其中添加以下两个文件；也可以将 `config.py` 中的 `OPENAI_AUTH_FILE` 和 `SEEDANCE_AUTH_FILE` 指向其他位置。
 
 `assets/api/auth.json`：
 
 ```json
-{
-  "OPENAI_API_KEY": "REPLACE_WITH_YOUR_API_KEY"
-}
+{ "OPENAI_API_KEY": "REPLACE_WITH_YOUR_API_KEY" }
 ```
 
 `assets/api/seedance_auth.json`：
 
 ```json
-{
-  "SEEDANCE_API_KEY": "REPLACE_WITH_YOUR_API_KEY"
-}
+{ "SEEDANCE_API_KEY": "REPLACE_WITH_YOUR_API_KEY" }
 ```
 
-将占位内容替换为自己的 API Key。
-
-### 4. 启动界面
+### 4. 启动
 
 在仓库根目录执行：
 
@@ -137,19 +137,13 @@ python -m pip install -r requirements.txt
 python -m gui.app
 ```
 
-程序会尝试打开浏览器，也可以手动访问：
+浏览器会自动打开；若未打开，请访问 <http://127.0.0.1:7860>。服务仅监听本机地址。
 
-```text
-http://127.0.0.1:7860
-```
-
-界面默认仅在本机监听。
-
-<a id="usage"></a>
+<a id="user-guide"></a>
 
 ## 🧭 使用指南
 
-### 🔄 使用流程
+### 使用流程
 
 #### 1. 准备输入
 
@@ -173,23 +167,23 @@ Blender 按以下顺序完成建模：
 2. **Robot**：准备机器人模型，审核预览图。
 3. **Composed**：组合场景与机器人，生成动作并审核完整白模视频。
 
-点击 **Accept and continue** 接受当前结果，或填写修改意见、附加参考图像后点击 **Submit revision**。每轮工程、脚本、预览和反馈会保存在任务目录中。
+点击 **Accept and continue** 接受当前结果，或填写修改意见、按需附加参考图像后点击 **Submit revision**。每轮工程、脚本、预览和反馈会保存在任务目录中。
 
 #### 3. 生成并确认视频
 
-Blender 完成后，点击 **Continue generation** 启动视频生成。程序使用白模视频与参考首帧请求视频生成服务，并输出评估结果。初版客观评分低于配置阈值时，流程最多自动生成一次修正版，之后进入完整评估与人工审核。
+Blender 完成后，点击 **Continue generation** 手动启动视频生成。程序将白模视频与参考首帧发送给视频生成服务，再对结果进行评估。初版客观评分低于配置阈值时，流程最多自动生成一次修正版，之后进入完整评估与人工审核。
 
 可以在界面中重新评估、提交修改，或点击 **Confirm final video** 确认最终视频。确认和阶段总结完成后，Harness 会归档结果并更新经验库。
 
-#### 4. 从历史任务开始
+#### 4. 从历史任务继续
 
-界面提供历史任务入口。**Load as new task** 会复制已完成的 Blender 结果，创建一个新的任务，并回到组合动画审核，适合在已有结果上继续修改。
+点击 **Load historical task**，选择一个任务，再点击 **Load as new task**。这会将已完成任务的 Blender 结果复制到新任务中，并重新打开 Composed 审核，便于继续修改或更换相机视角拍摄场景。
 
 单个工作区一次运行一个任务，等待人工审核时也会占用执行名额。
 
 <a id="trajectory-format"></a>
 
-### 📐 轨迹格式
+### 轨迹格式
 
 运动先验驱动模式接受以下两种文件格式：
 
@@ -207,11 +201,9 @@ Blender 完成后，点击 **Continue generation** 启动视频生成。程序�
 
 `eef` 仅用于机械臂。夹爪列以 `0` 闭合、`1` 张开作为约定参考，实际驱动映射取决于资产结构与标定信息。
 
-<a id="outputs"></a>
+<a id="outputs-and-experience-store"></a>
 
-### 📂 输出与经验库
-
-#### 任务输出
+### 输出与经验库
 
 每个任务保存在 `output/<task_id>/` 下，主要产物包括：
 
@@ -227,19 +219,17 @@ Blender 完成后，点击 **Continue generation** 启动视频生成。程序�
 
 建议通过任务记录和界面查看各版本的最终路径；Render 的修改版本会使用独立文件名。
 
-#### 经验库与提示词
-
-经验库默认位于 `assets/experience-store/`，以 JSONL 文件保存通用经验和特定范围的经验。Blender 建模轮次与 Render 视频版本会检索经验，Harness 在任务结束后根据阶段记录生成经验更新决策。
+经验库默认位于 `assets/experience-store/`，以 JSONL 文件保存通用经验和适用于特定情境的经验。Blender 建模轮次与 Render 视频版本会检索相关经验，Harness 在任务结束后根据阶段记录决定如何更新经验库。
 
 <a id="notes"></a>
 
-### 📌 使用说明
+### 使用说明
 
 - 任务文件包含本机路径和状态信息，运行中请保留输入、资产与任务目录的位置。
 - 修改 URDF 或网格后，如资产目录中已有 `blender/robot.blend`，请删除对应缓存后重新建模。
 - 模型请求、视频生成和修改会使用用户自己的服务额度。具体模型能力、服务可用性及生成耗时取决于所配置的服务商。
 
-<a id="authors"></a>
+<a id="contributors"></a>
 
 ## 👥 贡献者
 

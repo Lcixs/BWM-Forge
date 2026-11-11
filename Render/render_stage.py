@@ -42,8 +42,8 @@ def capture_render_log(path: Path):
         _RENDER_LOG.reset(token)
 
 
-def _log(message, *, path: Path | None = None):
-    print(f"[Render] {message}", flush=True)
+def _log(message, *, path: Path | None = None, log_source: str = "Render"):
+    print(f"[{log_source}] {message}", flush=True)
     destination = path if path is not None else _RENDER_LOG.get()
     if destination is None:
         return
@@ -52,15 +52,15 @@ def _log(message, *, path: Path | None = None):
         with _RENDER_LOG_LOCK:
             destination.parent.mkdir(parents=True, exist_ok=True)
             with destination.open("a", encoding="utf-8") as stream:
-                stream.write(json.dumps({"time": timestamp, "message": str(message)}, ensure_ascii=False) + "\n")
+                stream.write(json.dumps({"time": timestamp, "source": log_source, "message": str(message)}, ensure_ascii=False) + "\n")
     except OSError:
         pass  # A logging failure must not interrupt Render.
 
 
-def _checkpoint(source, state, status, step, message=None, error=None):
+def _checkpoint(source, state, status, step, message=None, error=None, *, log_source="Render"):
     save_progress(source, state, status=status, step=step, error=error)
     if message:
-        _log(message)
+        _log(message, log_source=log_source)
 
 
 def get_status(state) -> dict:
@@ -278,7 +278,7 @@ def _finish_generation(source, state, publisher, experience_adapter=None):
 
 def _export_summary(source, state, experience_adapter=None):
     state["harness_export"] = {"status": "pending", "file": None, "error": None}
-    _checkpoint(source, state, "awaiting_export", "summarizing", "Preparing final stage records.")
+    _checkpoint(source, state, "awaiting_export", "summarizing", "Preparing final stage records.", log_source="Harness")
     try:
         record = harness.collect_record(state)
         destination = source.output.parent / harness.SUMMARY_FILENAME
@@ -289,11 +289,11 @@ def _export_summary(source, state, experience_adapter=None):
             "file": destination.relative_to(source.task_dir).as_posix(), "error": None}
     except (Exception, KeyboardInterrupt) as exc:
         state["harness_export"] = {"status": "failed", "file": None, "error": str(exc) or "Summary interrupted"}
-        _checkpoint(source, state, "awaiting_export", "summarizing", f"The stage summary is incomplete: {exc}. Export can be retried separately.", error=str(exc))
+        _checkpoint(source, state, "awaiting_export", "summarizing", f"The stage summary is incomplete: {exc}. Export can be retried separately.", error=str(exc), log_source="Harness")
         if isinstance(exc, KeyboardInterrupt):
             raise
         return
-    _checkpoint(source, state, "completed", "completed", f"Harness stage record: {destination}")
+    _checkpoint(source, state, "completed", "completed", f"Harness stage record: {destination}", log_source="Harness")
 
 
 def _run_action(source, state, publisher, action, feedback, experience_adapter=None):

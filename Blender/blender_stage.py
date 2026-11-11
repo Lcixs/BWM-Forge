@@ -78,23 +78,23 @@ def _record(task_dir: Path, status: str, **updates: Any) -> None:
 def _export_summary(task_dir):
     destination = task_dir / "blender" / harness.SUMMARY_FILENAME
     try:
-        log_progress("Checking the stage summary and existing artifacts")
+        log_progress("Checking the stage summary and existing artifacts", source="Harness")
         record = harness.collect_record(task_dir)
         if not harness.summary_matches(record, destination):
             _record(task_dir, "blender_awaiting_summary", blender_status="awaiting_summary",
                     blender_step="summarizing", blender_summary_error=None)
             log_progress(
                 "Requesting the stage summary; waiting for the complete response after connecting"
-                f" (model: {harness.BLENDER_SUMMARY_MODEL})"
+                f" (model: {harness.BLENDER_SUMMARY_MODEL})", source="Harness"
             )
-            with progress_heartbeat("Stage summary"):
+            with progress_heartbeat("Stage summary", source="Harness"):
                 summary = harness.summarize_record(record, task_dir)
             harness.save_summary(record, summary, destination)
-            log_progress(f"Stage summary saved: {destination}")
+            log_progress(f"Stage summary saved: {destination}", source="Harness")
     except (Exception, KeyboardInterrupt) as exc:
         _record(task_dir, "blender_awaiting_summary", blender_status="awaiting_summary",
                 blender_step="summarizing", blender_summary_error=str(exc) or "Summary interrupted")
-        log_progress(f"White-model video preserved; summary is incomplete: {exc}")
+        log_progress(f"White-model video preserved; summary is incomplete: {exc}", source="Harness")
         print(f'Retry the summary only: python -m Blender.blender_stage "{task_dir}" --summary-only')
         if isinstance(exc, KeyboardInterrupt):
             raise

@@ -73,30 +73,30 @@ def capture_progress(path: Path):
         _PROGRESS_LOG.reset(token)
 
 
-def _emit_progress(message: str, path: Path | None) -> None:
+def _emit_progress(message: str, path: Path | None, *, source: str = "Blender") -> None:
     timestamp = datetime.now().astimezone()
-    print(f"[Blender] [{timestamp:%H:%M:%S}] {message}", file=sys.stderr, flush=True)
+    print(f"[{source}] [{timestamp:%H:%M:%S}] {message}", file=sys.stderr, flush=True)
     if path is not None:
         try:
             with _PROGRESS_WRITE_LOCK:
                 path.parent.mkdir(parents=True, exist_ok=True)
                 with path.open("a", encoding="utf-8") as stream:
                     stream.write(json.dumps({"time": timestamp.astimezone(timezone.utc).isoformat(),
-                                             "message": message}, ensure_ascii=False) + "\n")
+                                             "source": source, "message": message}, ensure_ascii=False) + "\n")
         except OSError:
             pass  # Progress logging must not interrupt the modeling task.
 
 
-def log_progress(message: str) -> None:
-    _emit_progress(message, _PROGRESS_LOG.get())
+def log_progress(message: str, *, source: str = "Blender") -> None:
+    _emit_progress(message, _PROGRESS_LOG.get(), source=source)
 
 
 @contextmanager
-def progress_heartbeat(label: str, interval: int = 20, *, notify=None):
+def progress_heartbeat(label: str, interval: int = 20, *, notify=None, source: str = "Blender"):
     stop = threading.Event()
     started = time.monotonic()
     path = _PROGRESS_LOG.get()
-    notify = notify or (lambda message: _emit_progress(message, path))
+    notify = notify or (lambda message: _emit_progress(message, path, source=source))
 
     def report():
         while not stop.wait(interval):
