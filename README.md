@@ -52,7 +52,7 @@ BWM-Forge creates Blender scenes and animations from robot assets, reference ima
 
 ## 🎬 Demo
 
-https://github.com/user-attachments/assets/16f00275-e761-4145-bf54-a166538858b6
+https://github.com/user-attachments/assets/419fc098-b061-4e2d-940e-27fd8a4a3cbf
 
 <a id="quick-start"></a>
 
