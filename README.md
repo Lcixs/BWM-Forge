@@ -145,6 +145,8 @@ Your browser opens automatically. If it doesn't, go to <http://127.0.0.1:7860>. 
 
 ### Workflow
 
+![workflow](examples/GUI_workflow.gif)
+
 #### 1. Prepare Inputs
 
 Select a robot type and asset, enter a task description, and choose an input mode:

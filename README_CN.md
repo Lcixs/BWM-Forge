@@ -145,6 +145,8 @@ python -m gui.app
 
 ### 使用流程
 
+![workflow](examples/GUI_workflow.gif)
+
 #### 1. 准备输入
 
 选择机器人类型和资产，填写任务描述，再选择输入模式：
