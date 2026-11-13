@@ -7,7 +7,7 @@
 <div align="center">
 
 [![Project Page](https://img.shields.io/badge/%F0%9F%8C%90%20Project%20Page-Demo-00bfff)](https://bwm-forge.github.io/)
-[![Paper](https://img.shields.io/static/v1?label=Paper&message=PDF&color=red&logo=arxiv)]()
+[![Paper](https://img.shields.io/static/v1?label=Paper&message=PDF&color=red&logo=arxiv)](https://arxiv.org/abs/2611.16221)
 [![License](https://img.shields.io/badge/License-Apache--2.0-green)](LICENSE)
 
 </div>
@@ -246,17 +246,17 @@ Blender 完成后，点击 **Continue generation** 手动启动视频生成。�
 
 ## 📚 引用
 
-**arXiv：TODO**（论文链接与编号待补充）
-
-如果本项目对你的研究有所帮助，欢迎引用相关论文。以下 BibTeX 为占位内容，待论文发布后更新。
+如果本项目对你的研究有所帮助，欢迎引用我们的论文：
 
 ```bibtex
-@article{bwmforge,
-  title   = {TODO},
-  author  = {TODO},
-  journal = {arXiv preprint arXiv:TODO},
-  year    = {TODO},
-  url     = {TODO}
+@misc{bwmforge,
+  title         = {{BWM-Forge}: Agentic World Programming for Embodied Intelligence},
+  author        = {{BWM Team}},
+  year          = {2026},
+  eprint        = {2611.16221},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2611.16221}
 }
 ```
 

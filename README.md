@@ -7,7 +7,7 @@
 <div align="center">
 
 [![Project Page](https://img.shields.io/badge/%F0%9F%8C%90%20Project%20Page-Demo-00bfff)](https://bwm-forge.github.io/)
-[![Paper](https://img.shields.io/static/v1?label=Paper&message=PDF&color=red&logo=arxiv)]()
+[![Paper](https://img.shields.io/static/v1?label=Paper&message=PDF&color=red&logo=arxiv)](https://arxiv.org/abs/2611.16221)
 [![License](https://img.shields.io/badge/License-Apache--2.0-green)](LICENSE)
 
 </div>
@@ -246,17 +246,18 @@ The experience store defaults to `assets/experience-store/`, with JSONL files fo
 
 ## 📚 Citation
 
-**arXiv: TODO** (paper URL and identifier to be added)
 
-If this project is useful for your research, please consider citing the associated paper. The BibTeX entry below is a placeholder and will be updated when the paper is released.
+If this project is useful for your research, please consider citing our paper:
 
 ```bibtex
-@article{bwmforge,
-  title   = {TODO},
-  author  = {TODO},
-  journal = {arXiv preprint arXiv:TODO},
-  year    = {TODO},
-  url     = {TODO}
+@misc{bwmforge,
+  title         = {{BWM-Forge}: Agentic World Programming for Embodied Intelligence},
+  author        = {{BWM Team}},
+  year          = {2026},
+  eprint        = {2611.16221},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO},
+  url           = {https://arxiv.org/abs/2611.16221}
 }
 ```
 
