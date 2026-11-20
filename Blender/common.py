@@ -318,28 +318,45 @@ def materialize_trajectory(source: Path, run_dir: Path, *, motion: dict) -> Dict
     derived.mkdir(parents=True, exist_ok=True)
     report_path = derived / "trajectory.json"
     array_file = source if source.suffix.lower() == ".npz" else (derived / "trajectory.npz").resolve()
+    array_keys = (["action"] if motion["action_space"] == "eef"
+                  else [motion.get("joint_field", "action")])
+    if motion.get("base_field"):
+        array_keys.append(motion["base_field"])
     fingerprint = hash_path(source)
     if report_path.exists():
         cached = json_load(report_path)
-        if (cached.get("array_key") == "action"
+        if (cached.get("array_keys") == array_keys
                 and cached.get("source_sha256") == fingerprint and cached.get("source_path") == str(source)
                 and cached.get("motion") == motion and cached.get("array_file") == str(array_file)
                 and array_file.is_file() and cached.get("array_sha256") == hash_path(array_file)):
             return cached
-    values = read_trajectory(source, action_space=motion["action_space"], joint_names=motion["joint_names"])
+    arrays = {}
+    for key in array_keys:
+        is_base_pose = key == motion.get("base_field")
+        arrays[key] = read_trajectory(
+            source,
+            action_space="eef" if is_base_pose or motion["action_space"] == "eef" else "joint",
+            joint_names=None if is_base_pose or motion["action_space"] == "eef" else motion["joint_names"],
+            field=key,
+        )
+    values = arrays[array_keys[0]]
+    if len({len(value) for value in arrays.values()}) != 1:
+        raise ValueError("Trajectory fields must contain the same number of frames.")
     duration = (len(values) - 1) / fps
     if not math.isfinite(duration):
         raise ValueError("The trajectory time range is not finite. Check fps.")
     if source.suffix.lower() == ".parquet":
         pending = array_file.with_suffix(".pending")
         with pending.open("wb") as stream:
-            np.savez_compressed(stream, action=values)
+            np.savez_compressed(stream, **arrays)
         pending.replace(array_file)
     report = {"source_path": str(source), "source_sha256": fingerprint,
               "motion": motion, "shape": list(values.shape),
+              "field_shapes": {key: list(value.shape) for key, value in arrays.items()},
               "duration_seconds": duration, "array_file": str(array_file),
-              "array_key": "action", "array_sha256": hash_path(array_file),
+              "array_key": array_keys[0], "array_keys": array_keys,
+              "array_sha256": hash_path(array_file),
               "report_json": "derived/trajectory.json",
-              "blender_contract": "np.load(array_file, allow_pickle=False)['action']; row i occurs at i/fps seconds"}
+              "blender_contract": f"np.load(array_file, allow_pickle=False) with fields {array_keys}; row i occurs at i/fps seconds"}
     write_json(report_path, report)
     return report

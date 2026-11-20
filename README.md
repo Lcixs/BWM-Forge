@@ -187,21 +187,22 @@ A workspace runs one task at a time, and a task waiting for your review also hol
 
 ### Trajectory Format
 
-The motion priors mode accepts two file formats:
+The motion priors mode accepts **NPZ** and **Parquet** files.
 
-- **NPZ**: A two-dimensional real-valued array named `action`, with shape `(T, D)`.
-- **Parquet**: A column named `action`, where each row contains a real-valued vector of length `D`.
+Let `T` be the number of frames and `n` the number of joints in the trajectory. All values must be finite; NaN, Inf, and object arrays are not accepted. Enter the sampling rate explicitly in the interface.
 
-All values must be finite; NaN, Inf, and object arrays are not accepted. Enter the sampling rate explicitly in the interface.
+| Embodiment | Motion representation | Fields and dimensions | Meaning |
+| --- | --- | --- | --- |
+| Robot arm | `joint` | `action`: `(T, n)` | Absolute joint positions, ordered by the joint names entered in the interface |
+| Robot arm | `eef` | `action`: `(T, 7)` | TCP pose in the base frame: `x, y, z, roll, pitch, yaw, gripper` |
+| Dexterous hand | `joint` | `joint`: `(T, n)` | Absolute finger joint positions; add `base` when the wrist/palm moves |
+| Dexterous hand | Wrist/palm + finger joints | `joint`: `(T, n)`; `base`: `(T, 7)` | Whole-hand pose plus finger motion; omit `base` for a fixed wrist |
+| Robot dog | Body + joints | `joint`: `(T, n)`; `base`: `(T, 7)` | Synchronized body movement and joint motion |
+| Humanoid | Root + joints | `joint`: `(T, n)`; `base`: `(T, 7)` | Synchronized root movement and joint motion |
 
-| Action Space | Columns | Units and Conventions |
-| --- | --- | --- |
-| `joint` | Each column corresponds to an explicitly named independent URDF joint, in the order entered in the interface | Absolute joint positions; radians for rotation and meters for translation |
-| `eef` | Seven fixed columns: `x, y, z, roll, pitch, yaw, gripper` | Absolute TCP pose in the base frame; position in meters, angles in radians, rotation order `Rz @ Ry @ Rx` |
+Each `joint` column matches an independently movable URDF joint in the order entered in the interface. `base` is ordered `x, y, z, qw, qx, qy, qz` and represents the absolute world pose of the URDF root link. Robot dogs and humanoids require both fields; dexterous hands may omit `base`. Robot arms use `action` and do not use `base`.
 
-For `joint` trajectories, robot arms, humanoids, and robot dogs all require joint names in trajectory-column order: the first name corresponds to the first column, and so on. Names must match the independently movable joints in the selected asset's URDF.
-
-`eef` is supported only for robot arms. The gripper channel uses `0` for closed and `1` for open as reference conventions; the actual mapping depends on the asset's structure and calibration.
+Joint positions are absolute; revolute joints use radians and prismatic joints use meters. `eef` positions use meters, angles use radians, and the rotation order is `Rz @ Ry @ Rx`. `eef` is supported only for robot arms. Its gripper channel uses `0` for closed and `1` for open as reference conventions; the actual mapping depends on the asset's structure and calibration.
 
 <a id="outputs-and-experience-store"></a>
 

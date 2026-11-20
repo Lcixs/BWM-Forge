@@ -20,7 +20,7 @@ Infer root placement and initial joint states from directed link/joint relations
 
 ## Type 1: Use the first frame and trajectory
 
-Register the initial configuration using the visible robot chain, task objects, and target region. Preserve the original Parquet/NPZ, conversion report, and hashes. Treat the trajectory as a low-weight motion reference: first-frame correspondence, URDF legality, task contact/support, and continuous motion take priority. Record which segments were used, retargeted, or ignored and why. Do not describe interpolated frames as original samples.
+Register the initial configuration using the visible robot chain, task objects, and target region. Preserve the original Parquet/NPZ, conversion report, and hashes. Read every declared field in the complete standardized NPZ. For robot dogs and humanoids, use the supplied base-pose field named by `motion.base_field` together with `joint`; for a dexterous hand, use that base pose when present. Retain the input root path and heading while applying one documented rigid alignment to register its first pose to the scene. Do not synthesize a substitute root path when a base-pose field is supplied. Older action-only handoffs have no measured root trajectory; follow their report and label any generated root path as inferred. Treat supplied trajectories as motion references: first-frame correspondence, URDF legality, task contact/support, and continuous motion take priority. Record which segments were used, retargeted, or ignored and why. Do not describe interpolated frames as original samples.
 
 ## Type 2: Map demonstrations to the robot
 

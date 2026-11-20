@@ -112,17 +112,28 @@ def prepare(task_dir: str | Path, *, input_type: int | None = None):
         log_progress(f"Type 1: preparing trajectory {trajectory}")
         motion = materialize_trajectory(trajectory, blender_dir, motion=manifest["motion"])
         log_progress(f"Trajectory prepared: {blender_dir / motion['report_json']}")
+        array_fields = motion["array_keys"]
+        joint_field = manifest["motion"].get("joint_field", "action")
+        base_field = manifest["motion"].get("base_field")
+        joint_guidance = (f"Read `{joint_field}` in `motion.joint_names` order."
+                          if manifest["motion"].get("action_space") == "joint"
+                          else "Read the declared EEF channels in their documented order.")
+        base_guidance = (f"Read `{base_field}` as the base pose: xyz meters and normalized wxyz quaternion, "
+                         f"the absolute world pose of `{manifest['motion']['base_link']}`. "
+                         "Use it for root motion; do not invent a replacement path."
+                         if base_field else "No base-pose field is declared.")
         mode_context = f"""Scene supplement: {manifest.get('scene_supplement_text') or 'None'}
 First frame: {first_frame}
 Original trajectory: {trajectory}
 Trajectory report: {blender_dir / motion['report_json']}
-Blender-readable NPZ: {motion['array_file']}. Read only the action array as the trajectory.
+Blender-readable NPZ: {motion['array_file']}. Read all declared arrays {array_fields}; preserve and use every provided motion field.
 Trajectory conventions: {json.dumps(manifest['motion'], ensure_ascii=False)}
-Sample count: {motion['shape'][0]}; time from first to last sample: {motion['duration_seconds']} seconds.
+Field shapes: {json.dumps(motion['field_shapes'], ensure_ascii=False)}. Sample count: {motion['shape'][0]}; time from first to last sample: {motion['duration_seconds']} seconds.
 Use row i at i/fps seconds. fps is the input sampling rate, separate from the output video frame rate. Interpolation must preserve the original duration.
+{joint_guidance} {base_guidance}
 If the declared motion includes a gripper channel and the target has that mechanism, preserve raw gripper values; they need not lie in [0,1] and must not be clipped or renormalized. Use 0 closed and 1 open only as convention references.
 For applicable gripper motion, determine opening direction and mapping from URDF drives, mimic relationships, and geometry. Do not treat opening values directly as joint angles; document unknown calibration.
-Motion evidence: prioritize the first frame and task constraints; use the trajectory as a motion reference. Read only the NPZ above; Blender Python does not need pyarrow."""
+Motion evidence: prioritize the first frame and task constraints; use the trajectory as a motion reference. Read the complete standardized NPZ above; Blender Python does not need pyarrow."""
     elif input_type == 0:
         mode_context = f"""Scene supplement: {manifest.get('scene_supplement_text') or 'None'}
 First frame: {first_frame}
